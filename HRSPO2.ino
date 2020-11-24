@@ -5,6 +5,7 @@ MAX30105 particleSensor;
 uint32_t redBuffer;
 uint32_t irBuffer;
 int hrBuffer;
+int sensorHR;
 
 void setup() {
   Serial.begin(9600); // initialize serial communication at 115200 bits per second:
