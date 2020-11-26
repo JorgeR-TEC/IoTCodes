@@ -2,7 +2,7 @@ import serial
 
 import matplotlib.pyplot as plt
 import random
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks as fp
 import numpy as np
 # 25 samples per second (in algorithm.h)
 SAMPLE_FREQ = 25
@@ -196,7 +196,7 @@ def remove_close_peaks(n_peaks, ir_valley_locs, x, min_dist):
 
     return sorted_indices, n_peaks
 
-def smooth_curve_test(points, sample_size):
+def smooth_curve_simple(points, sample_size):
     smoothed_points = []
     reads = [0 for _ in range(sample_size)]
     id_reads = 0
@@ -243,31 +243,53 @@ def smooth_curve_average(points, sample_size):
 
 random.seed(0)
 
-def analisisHR():
-    global hrValues
-    global miliValues
-    '''for i in range(0, 96):
-        valores.append((hrValues[i]+hrValues[i+1]+hrValues[i+2])/3);
-        valoresMili.append((miliValues[i]+miliValues[i+1]+miliValues[i+2])/3)'''
-    nuevosValores1= smooth_curve_test(hrValues, 15)
-    nuevosValores=[i for (i,j) in nuevosValores1 ]
-    len(nuevosValores);
-    peaks = find_peaks(nuevosValores)[0]
-    
-    plt.plot(nuevosValores);
-    #print(peaks)
-    plt.scatter(peaks, [nuevosValores[j] for j in peaks], marker='+', c='Red')
+def analisisHR(hrValues, miliValues, sample_size):
+    plt.plot(miliValues,hrValues)
+    #plt.show();
+    smoothed_values =[ data for data,i in smooth_curve_simple(hrValues, sample_size)]
+
+    average = []
+    peaks = fp(smoothed_values)[0]
+    previous = peaks[0]
+    peakplotX=[miliValues[previous]]
+    peakplotY=[smoothed_values[previous]]
+    for id in peaks[1:]:
+        average.append(miliValues[id] - miliValues[previous])
+        previous = id
+        peakplotX.append(miliValues[previous])
+        peakplotY.append(smoothed_values[previous])
+    plt.plot( smoothed_values)
+   #plt.scatter(peakplotY , marker='+', c='Red')
     #plt.show()
-    #print(len(nuevosValores));
-    bajada=False
-    palpitacionAnterior=-1
-    palpitaciones=[]
-    for i in range(0, len(peaks)-1):
-        palpitaciones.append(miliValues[peaks[i+1]]-miliValues[peaks[i]]);
-    print(palpitaciones)
-    tiempoPromedio=sum(palpitaciones)/len(palpitaciones)
-    valorHR=(60000*len(peaks))/(miliValues[-1]-miliValues[0])
-    print("duracion:", miliValues[-1]-miliValues[0], valorHR)
+
+    print("Picos: ",len(peaks), " Longitud: ", miliValues[-1]-miliValues[0])
+    len(peaks)
+    valorHR=(60000)/((miliValues[-1]-miliValues[0])/len(peaks))
+    return valorHR
+
+def analisisHR2(hrValues, miliValues, sample_size):
+    #smoothed_values = smooth_curve_simple(hrValues, sample_size)
+    smoothed_values =[ data for data,i in smooth_curve_simple(hrValues, sample_size)]
+    peaks = fp(smoothed_values)[0]
+
+    average = []
+    for id in range(0, len(peaks)-1,2):
+        current = peaks[id+1] * sample_size + sample_size
+        previous = peaks[id] * sample_size + sample_size
+        average.append(miliValues[current] - miliValues[previous])
+        # previous = id*sample_size
+
+    plt.plot(smoothed_values)
+    plt.scatter(peaks, [smoothed_values[j] for j in peaks], marker='+', c='Red')
+    #plt.show()
+
+    valorHR=(60000*len(peaks))/(miliValues[-1] - miliValues[0])
+    # valorHR=(60000)/(sum(average)/len(average))
+    return valorHR
+
+    #print(hr)
+    
+
 
 ser=serial.Serial("COM3", 9600);
 hrValues=[]
@@ -281,7 +303,7 @@ while(1):
         lineBytes=ser.readline();
         line=lineBytes.decode("ascii")
         line=line.rstrip();#HR:118;ML:1704
-        print(line)
+        #print(line)
         medidas=line.split(";") #["HR:118", "ML:1704"]
         hr=int(medidas[0].split(":")[1]) #["HR", "118"], toma el 118, lo convierte a int y lo guarda
         milis=int(medidas[1].split(":")[1]) #["ML", "1704"]
@@ -294,18 +316,15 @@ while(1):
     except:
         continue
     if(len(hrValues)==100):
-            print(calc_hr_and_spo2(irValues, redValues))
-            print(irValues)
-            print(redValues)
-            #analisisHR()
+            print("SPO2:",calc_hr_and_spo2(irValues, redValues))
+            #print(irValues)
+            #print(redValues)
+            print("HR:",analisisHR2(hrValues, miliValues, 2))
             hrValues=hrValues[25:]
             miliValues=miliValues[25:]
             redValues=redValues[25:]
             irValues=irValues[25:]
        
-    
-    #print(hr)
-    
 
 
 

@@ -42,4 +42,5 @@ void loop() {
    dataToSend+=";IR:";
    dataToSend+=irBuffer;
    Serial.println(dataToSend);
+   //Serial.println(hrBuffer);
 }
