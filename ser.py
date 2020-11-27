@@ -1,4 +1,4 @@
-import serial
+#import serial
 
 import matplotlib.pyplot as plt
 import random
@@ -291,19 +291,25 @@ def analisisHR2(hrValues, miliValues, sample_size):
     
 
 
-ser=serial.Serial("COM3", 9600);
+#ser=serial.Serial("COM3", 9600);
 hrValues=[]
 miliValues=[]
 redValues=[]
 irValues=[]
+import socket
+s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.bind(("0.0.0.0", 1337))
+#while(1):
+    #dataFromClient=s.recv(1024)
+    #print(dataFromClient)
     
 
 while(1):
     try:
-        lineBytes=ser.readline();
+        #lineBytes=ser.readline();
+        lineBytes=s.recv(1024);
         line=lineBytes.decode("ascii")
         line=line.rstrip();#HR:118;ML:1704
-        #print(line)
         medidas=line.split(";") #["HR:118", "ML:1704"]
         hr=int(medidas[0].split(":")[1]) #["HR", "118"], toma el 118, lo convierte a int y lo guarda
         milis=int(medidas[1].split(":")[1]) #["ML", "1704"]
@@ -313,18 +319,20 @@ while(1):
         miliValues.append(milis)
         redValues.append(red)
         irValues.append(ir)
+        #print(line)
     except:
         continue
     if(len(hrValues)==100):
             print("SPO2:",calc_hr_and_spo2(irValues, redValues))
             #print(irValues)
             #print(redValues)
-            print("HR:",analisisHR2(hrValues, miliValues, 2))
+            print("HR:",analisisHR2(hrValues, miliValues, 1))
             hrValues=hrValues[25:]
             miliValues=miliValues[25:]
             redValues=redValues[25:]
             irValues=irValues[25:]
        
+
 
 
 
