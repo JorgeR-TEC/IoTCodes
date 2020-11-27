@@ -290,24 +290,25 @@ def analisisHR2(hrValues, miliValues, sample_size):
     #print(hr)
     
 
-
-#ser=serial.Serial("COM3", 9600);
+#para serial
+import serial
+ser=serial.Serial("COM3", 9600);
 hrValues=[]
 miliValues=[]
 redValues=[]
 irValues=[]
-import socket
+#para wifi
+'''import socket
+
 s=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind(("0.0.0.0", 1337))
-#while(1):
-    #dataFromClient=s.recv(1024)
-    #print(dataFromClient)
+'''
     
 
 while(1):
     try:
-        #lineBytes=ser.readline();
-        lineBytes=s.recv(1024);
+        lineBytes=ser.readline();
+        #lineBytes=s.recv(1024);
         line=lineBytes.decode("ascii")
         line=line.rstrip();#HR:118;ML:1704
         medidas=line.split(";") #["HR:118", "ML:1704"]
